@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f9f9f9;
+        }
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        h2 {
+            margin-top: 30px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .pagination {
+            margin-top: 20px;
+            text-align: center;
+        }
+        .pagination a {
+            color: #007bff;
+            text-decoration: none;
+            margin: 0 5px;
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+        .pagination a:hover {
+            background-color: #007bff;
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Información del Recibo de Luz</h1>
+        <h2>Datos del Cliente</h2>
+        <table>
+            <tr><th>NOMBRE DEL SERVICIO</th><td>{{ receipt.datos_cliente.get('NOMBRE DEL SERVICIO', 'N/A') }}</td></tr>
+            <tr><th>NÚMERO DEL SERVICIO</th><td>{{ receipt.datos_cliente.get('NÚMERO DEL SERVICIO', 'N/A') }}</td></tr>
+            <tr><th>CIUDAD</th><td>{{ receipt.datos_cliente.get('CIUDAD', 'N/A') }}</td></tr>
+            <tr><th>ESTADO</th><td>{{ receipt.datos_cliente.get('ESTADO', 'N/A') }}</td></tr>
+            <tr><th>TARIFA</th><td>{{ receipt.datos_cliente.get('TARIFA', 'N/A') }}</td></tr>
+            <tr><th>Nº MEDIDOR</th><td>{{ receipt.datos_cliente.get('Nº MEDIDOR', 'N/A') }}</td></tr>
+            <tr><th>MULTIPLICADOR</th><td>{{ receipt.datos_cliente.get('MULTIPLICADOR', 'N/A') }}</td></tr>
+            <tr><th>PERIODO FACTURADO</th><td>{{ receipt.datos_cliente.get('PERIODO FACTURADO', 'N/A') }}</td></tr>
+        </table>
+
+        <h2>Datos de Lectura</h2>
+        <table>
+            <tr><th>LECTURA ACTUAL</th><td>{{ receipt.datos_lectura.get('LECTURA ACTUAL', 'N/A') }}</td></tr>
+            <tr><th>LECTURA ANTERIOR</th><td>{{ receipt.datos_lectura.get('LECTURA ANTERIOR', 'N/A') }}</td></tr>
+            <tr><th>TOTAL PERIODO</th><td>{{ receipt.datos_lectura.get('TOTAL PERIODO', 'N/A') }}</td></tr>
+            <tr><th>PRECIO</th><td>{{ receipt.datos_lectura.get('PRECIO', 'N/A') }}</td></tr>
+            <tr><th>SUBTOTAL</th><td>{{ receipt.datos_lectura.get('SUBTOTAL', 'N/A') }}</td></tr>
+        </table>
+
+        <h2>Costos de la Energía en el Mercado Eléctrico Mayorista</h2>
+        <table>
+            <tr><th>SUMINISTRO</th><td>{{ receipt.costos_energia.get('SUMINISTRO', 'N/A') }}</td></tr>
+            <tr><th>DISTRIBUCIÓN</th><td>{{ receipt.costos_energia.get('DISTRIBUCIÓN', 'N/A') }}</td></tr>
+            <tr><th>TRANSMISIÓN</th><td>{{ receipt.costos_energia.get('TRANSMISIÓN', 'N/A') }}</td></tr>
+            <tr><th>CENACE</th><td>{{ receipt.costos_energia.get('CENACE', 'N/A') }}</td></tr>
+            <tr><th>ENERGÍA</th><td>{{ receipt.costos_energia.get('ENERGÍA', 'N/A') }}</td></tr>
+            <tr><th>CAPACIDAD</th><td>{{ receipt.costos_energia.get('CAPACIDAD', 'N/A') }}</td></tr>
+            <tr><th>SCNMEM</th><td>{{ receipt.costos_energia.get('SCNMEM', 'N/A') }}</td></tr>
+            <tr><th>TOTAL</th><td>{{ receipt.costos_energia.get('TOTAL', 'N/A') }}</td></tr>
+        </table>
+
+        <h2>Desglose del Importe a Pagar</h2>
+        <table>
+            <tr><th>CARGO FIJO</th><td>{{ receipt.desglose_importe.get('CARGO FIJO', 'N/A') }}</td></tr>
+            <tr><th>ENERGÍA</th><td>{{ receipt.desglose_importe.get('ENERGÍA', 'N/A') }}</td></tr>
+            <tr><th>SUBTOTAL</th><td>{{ receipt.desglose_importe.get('SUBTOTAL', 'N/A') }}</td></tr>
+            <tr><th>IVA</th><td>{{ receipt.desglose_importe.get('IVA', 'N/A') }}</td></tr>
+            <tr><th>FAC. DEL PERIODO</th><td>{{ receipt.desglose_importe.get('FAC. DEL PERIODO', 'N/A') }}</td></tr>
+            <tr><th>DAP</th><td>{{ receipt.desglose_importe.get('DAP', 'N/A') }}</td></tr>
+            <tr><th>TOTAL</th><td>{{ receipt.desglose_importe.get('TOTAL', 'N/A') }}</td></tr>
+        </table>
+
+        <h2>Tabla de Consumo Histórico</h2>
+        <table>
+            <tr><th>PERIODO</th><th>KWH</th><th>IMPORTE</th><th>PAGOS</th></tr>
+            {% for consumo in receipt.consumo_historico %}
+            <tr>
+                <td>{{ consumo.get('PERIODO', 'N/A') }}</td>
+                <td>{{ consumo.get('KWH', 'N/A') }}</td>
+                <td>{{ consumo.get('IMPORTE', 'N/A') }}</td>
+                <td>{{ consumo.get('PAGOS', 'N/A') }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+        
+        <div class="pagination">
+            {% if page > 1 %}
+                <a href="{{ url_for('results', page=page-1) }}">&laquo; Anterior</a>
+            {% endif %}
+            {% if page < total_pages %}
+                <a href="{{ url_for('results', page=page+1) }}">Siguiente &raquo;</a>
+            {% endif %}
+        </div>
+        <a href="{{ url_for('download', page=page) }}" class="btn">Descargar Excel</a>
+        <a href="{{ url_for('index') }}" class="btn">Subir más recibos</a>
+    </div>
+</body>
+</html>
