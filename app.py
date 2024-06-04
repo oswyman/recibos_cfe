@@ -90,16 +90,18 @@ def extract_info_from_text(text):
     )
     extracted_content = response.choices[0].message['content'].strip()
     print(f"Response from OpenAI: {extracted_content}")
+    
+    # Clean potential code blocks and ensure valid JSON format
+    if extracted_content.startswith("```json"):
+        extracted_content = extracted_content[7:].strip()
+    if extracted_content.endswith("```"):
+        extracted_content = extracted_content[:-3].strip()
+
     return extracted_content
 
 def parse_extracted_info(info):
     try:
         info_cleaned = info.strip()
-        # Clean potential code blocks
-        if info_cleaned.startswith("```json"):
-            info_cleaned = info_cleaned[7:].strip()
-        if info_cleaned.endswith("```"):
-            info_cleaned = info_cleaned[:-3].strip()
         # Ensure valid JSON format
         if info_cleaned.startswith('{') and info_cleaned.endswith('}'):
             data = json.loads(info_cleaned)
