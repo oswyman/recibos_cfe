@@ -1,6 +1,8 @@
 flask
 gunicorn
-openai
 PyPDF2
 pandas
+openai
 python-dotenv
+flask-wtf
+werkzeug
