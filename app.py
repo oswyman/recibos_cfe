@@ -5,18 +5,28 @@ import os
 import json
 import pandas as pd
 from dotenv import load_dotenv
+from werkzeug.utils import secure_filename
+from flask_wtf.csrf import CSRFProtect
+from flask_wtf import FlaskForm
+from wtforms import MultipleFileField, SubmitField
 
-load_dotenv('touch.env')  # Cargar variables de entorno desde el archivo touch.env
+load_dotenv('touch.env')
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = 'uploads'
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Límite de tamaño de archivo: 16 MB
 app.secret_key = os.getenv('FLASK_SECRET_KEY', 'supersecretkey')
+
+csrf = CSRFProtect(app)
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
 
-# Verificar que la clave API se ha cargado correctamente
 if openai.api_key is None or openai.api_key.startswith("sk-YOUR"):
     raise ValueError("No API key found or incorrect API key provided. Please set the OPENAI_API_KEY in touch.env")
+
+class UploadForm(FlaskForm):
+    files = MultipleFileField('Sube tus archivos PDF')
+    submit = SubmitField('Subir y Procesar')
 
 def extract_text_from_pdf(pdf_path):
     with open(pdf_path, 'rb') as file:
@@ -89,7 +99,6 @@ def extract_info_from_text(text):
         ]
     )
     extracted_content = response.choices[0].message['content'].strip()
-    print(f"Response from OpenAI: {extracted_content}")
     
     # Clean potential code blocks and ensure valid JSON format
     if extracted_content.startswith("```json"):
@@ -102,7 +111,6 @@ def extract_info_from_text(text):
 def parse_extracted_info(info):
     try:
         info_cleaned = info.strip()
-        # Ensure valid JSON format
         if info_cleaned.startswith('{') and info_cleaned.endswith('}'):
             data = json.loads(info_cleaned)
         else:
@@ -119,44 +127,38 @@ def parse_extracted_info(info):
 
     return datos_cliente, datos_lectura, costos_energia, desglose_importe, consumo_historico
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 def index():
-    return render_template('index.html')
-
-@app.route('/upload', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files:
-        flash('No file part')
-        return redirect(url_for('index'))
-
-    files = request.files.getlist('file')
-    if not files:
-        flash('No selected file')
-        return redirect(url_for('index'))
-
-    extracted_data = []
-    filenames = []
-    for file in files:
-        if file.filename == '':
-            flash('No selected file')
-            return redirect(url_for('index'))
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
-        file.save(file_path)
-        text = extract_text_from_pdf(file_path)
-        info = extract_info_from_text(text)
-        datos_cliente, datos_lectura, costos_energia, desglose_importe, consumo_historico = parse_extracted_info(info)
-        extracted_data.append({
-            'datos_cliente': datos_cliente,
-            'datos_lectura': datos_lectura,
-            'costos_energia': costos_energia,
-            'desglose_importe': desglose_importe,
-            'consumo_historico': consumo_historico
-        })
-        filenames.append(file.filename)
-
-    session['extracted_data'] = extracted_data
-    session['filenames'] = filenames
-    return redirect(url_for('results', page=1))
+    form = UploadForm()
+    if form.validate_on_submit():
+        files = form.files.data
+        extracted_data = []
+        filenames = []
+        for file in files:
+            if file.filename == '':
+                flash('No selected file')
+                return redirect(url_for('index'))
+            if not file.filename.lower().endswith('.pdf'):
+                flash(f'File {file.filename} is not a PDF')
+                continue
+            filename = secure_filename(file.filename)
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(file_path)
+            text = extract_text_from_pdf(file_path)
+            info = extract_info_from_text(text)
+            datos_cliente, datos_lectura, costos_energia, desglose_importe, consumo_historico = parse_extracted_info(info)
+            extracted_data.append({
+                'datos_cliente': datos_cliente,
+                'datos_lectura': datos_lectura,
+                'costos_energia': costos_energia,
+                'desglose_importe': desglose_importe,
+                'consumo_historico': consumo_historico
+            })
+            filenames.append(filename)
+        session['extracted_data'] = extracted_data
+        session['filenames'] = filenames
+        return redirect(url_for('results', page=1))
+    return render_template('index.html', form=form)
 
 @app.route('/results/<int:page>')
 def results(page):
@@ -181,14 +183,12 @@ def download(page):
     receipt = data[page - 1]
     filename = filenames[page - 1].replace('.pdf', '.xlsx')
     
-    # Crear un DataFrame de pandas con los datos
     df_cliente = pd.DataFrame([receipt['datos_cliente']])
     df_lectura = pd.DataFrame([receipt['datos_lectura']])
     df_costos = pd.DataFrame([receipt['costos_energia']])
     df_importe = pd.DataFrame([receipt['desglose_importe']])
     df_consumo = pd.DataFrame(receipt['consumo_historico'])
 
-    # Crear un archivo Excel con múltiples hojas
     excel_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
     with pd.ExcelWriter(excel_path, engine='openpyxl') as writer:
         df_cliente.to_excel(writer, sheet_name='Datos del Cliente', index=False)
@@ -202,4 +202,4 @@ def download(page):
 if __name__ == '__main__':
     if not os.path.exists('uploads'):
         os.makedirs('uploads')
-    app.run(debug=True)
+    app.run()
