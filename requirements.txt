@@ -1,6 +1,7 @@
 flask
 gunicorn
-openai
+openai==0.28
 PyPDF2
 pandas
 python-dotenv
+openpyxl
